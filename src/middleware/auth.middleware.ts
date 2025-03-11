@@ -16,3 +16,4 @@ export const userMiddleware = (req: Request, res: Response, next: NextFunction) 
             message: "You are logged in"
         })
     }
+}
