@@ -1,53 +1,56 @@
-import User from "../ models/user.model";
-import { Request, Response } from 'express';
-import { jwt } from "jsonwebtoken";
+import { Request, Response } from "express";
+import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import User from "../ models/user.model";
 
-const JWT_PASSWORD = 1232422
 
+
+
+
+// Signup function (Register user)
 const Signin = async (req: Request, res: Response) => {
-    const username = req.body.username;
-    const password = req.body.password;
+    try {
+        const { username, password } = req.body;
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    User.create({
-        username: username,
-        password: hashedPassword,
-    })
+        // Hash the password before saving it
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-    res.json({
-        message: "User singed Up"
-    })
-}
+        const newUser = await User.create({
+            username,
+            password: hashedPassword,
+        });
 
-
-const SignUp = async (req: Request, res: Response) => {
-    const username = req.body.username;
-    const password = req.body.password;
-
-
-    const existingUser = await User.findOne({
-        username,
-        password
-    })
-
-    const isPasswordCorrect = await bcrypt.compare(password, existingUser.password)
-    if (existingUser) {
-        const token = jwt.sign({
-            id: existingUser._id
-        }, JWT_PASSWORD)
-        res.json({
-            token
-        })
-    } else {
-        res.status(403).json({
-            message: "Incorrect credentials"
-        })
+        res.status(201).json({ message: "User signed up successfully", user: newUser });
+    } catch (error) {
+        res.status(500).json({ message: "Error signing up", error });
     }
-}
+};
 
+// Login function (Authenticate user)
+const Signup = async (req: any, res: any) => {
+    try {
+        const { username, password } = req.body;
 
-export {
-    Signin,
-    SignUp
-}
+        // Find user by username
+        const existingUser = await User.findOne({ username });
+
+        if (!existingUser) {
+            return res.status(403).json({ message: "Incorrect credentials" });
+        }
+
+        // Compare hashed password
+        const isPasswordCorrect = await bcrypt.compare(password, existingUser.password);
+        if (!isPasswordCorrect) {
+            return res.status(403).json({ message: "Incorrect credentials" });
+        }
+
+        // Generate JWT token
+        const token = jwt.sign({ id: existingUser._id }, JWT_SECRET, { expiresIn: "1h" });
+
+        res.json({ token });
+    } catch (error) {
+        res.status(500).json({ message: "Error signing in", error });
+    }
+};
+
+export { Signin, Signup };
