@@ -8,11 +8,12 @@ const app = express();
 app.use(express.json());
 
 
-app.listen(3000, () => {
-    console.log("the the server started at ", 3000)
+app.listen(8000, () => {
+    console.log("the the server started at ", 8000)
 })
 
-app.use('api/v1', mainRouter)
+app.use('/api/v1', mainRouter)
+
 
 ConnectDb();
 

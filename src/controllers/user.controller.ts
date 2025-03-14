@@ -2,15 +2,18 @@ import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import User from "../ models/user.model";
-
-
-
-
+import { JWT_SECRET } from "../config";
 
 // Signup function (Register user)
-const Signin = async (req: Request, res: Response) => {
+const Signup = async (req: any, res: any) => {
     try {
         const { username, password } = req.body;
+
+        // Check if user already exists
+        const existingUser = await User.findOne({ username });
+        if (existingUser) {
+            return res.status(400).json({ message: "User already exists" });
+        }
 
         // Hash the password before saving it
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -27,13 +30,12 @@ const Signin = async (req: Request, res: Response) => {
 };
 
 // Login function (Authenticate user)
-const Signup = async (req: any, res: any) => {
+const Signin = async (req: any, res: any) => {
     try {
         const { username, password } = req.body;
 
         // Find user by username
         const existingUser = await User.findOne({ username });
-
         if (!existingUser) {
             return res.status(403).json({ message: "Incorrect credentials" });
         }
@@ -47,10 +49,10 @@ const Signup = async (req: any, res: any) => {
         // Generate JWT token
         const token = jwt.sign({ id: existingUser._id }, JWT_SECRET, { expiresIn: "1h" });
 
-        res.json({ token });
+        res.json({ message: "Sign-in successful", token });
     } catch (error) {
         res.status(500).json({ message: "Error signing in", error });
     }
 };
 
-export { Signin, Signup };
+export { Signup, Signin };
