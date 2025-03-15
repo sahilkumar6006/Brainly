@@ -6,13 +6,14 @@ const contentController = async (req: any, res: any) => {
     try {
       const content = await Content.find({
         userId: userId,
-      })
+      }).populate("userId", "username");
 
       console.log("the content", content)
 
-      res.json({
-        content
-      })
+    res.status(200).json({
+        message: "Content fetched successfully",
+        content,
+    });
     } catch (error) {
         res.status(500).json({ message: "Error creating content", error });
     }
@@ -23,6 +24,7 @@ const contentController = async (req: any, res: any) => {
 const contentCreate = async (req: any, res: any) => {
     const link = req.body.link;
     const type  = req.body.type;
+    const title = req.body.title;
 
     console.log("in the link type", link, type)
 
@@ -33,6 +35,7 @@ const contentCreate = async (req: any, res: any) => {
         link,
         type,
         userId,
+        title,
         tags: []
      })
 
@@ -41,6 +44,21 @@ const contentCreate = async (req: any, res: any) => {
     })
 }
 
+
+const deletContent = async (req: any, res: any) => {
+    const id = req.params.id;
+    const userId = req.userId;
+
+    try {
+        const content = await Content.findByIdAndDelete(id);
+        if (!content) {
+            return res.status(404).json({ message: "Content not found" });
+        }
+        res.status(200).json({ message: "Content deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Error deleting content", error });
+    }
+};
 
 export {
     contentCreate,
